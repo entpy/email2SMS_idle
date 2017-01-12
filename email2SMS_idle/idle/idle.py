@@ -31,7 +31,9 @@ class Idler(object):
  
     def idle(self):
         # Starting an unending loop here
+        cont = 0
         while True:
+            cont++
             # This is part of the trick to make the loop stop 
             # when the stop() command is given
             if self.event.isSet():
@@ -58,6 +60,10 @@ class Idler(object):
             if self.needsync:
                 self.event.clear()
                 self.dosync()
+
+            if cont > 10000:
+                logger.info("check")
+                cont = 0
  
     # The method that gets called when a new email arrives. 
     def dosync(self):
