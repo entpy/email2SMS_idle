@@ -31,12 +31,8 @@ class Idler(object):
  
     def idle(self):
         # Starting an unending loop here
-        cont = 0
         while True:
-            cont += 1
-            if cont > 100:
-                logger.info("check")
-                cont = 0
+            logger.info("check")
             # This is part of the trick to make the loop stop 
             # when the stop() command is given
             if self.event.isSet():
