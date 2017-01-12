@@ -2,8 +2,8 @@
 
 from __future__ import unicode_literals, print_function
 from django.apps import AppConfig
-from idle.idle import Idler
-from idle.polling import GmailPolling
+from idle import Idler
+from polling import GmailPolling
 import logging, time
 
 # Get an instance of a logger
@@ -19,7 +19,7 @@ class IdleConfig(AppConfig):
         return True
 
     def init_idle(self):
-        """Function to init imap idle"""
+        #""Function to init imap idle""
         # Had to do this stuff in a try-finally, since some testing 
         # went a little wrong.....
         try:
@@ -29,9 +29,9 @@ class IdleConfig(AppConfig):
             idler = Idler(GmailPolling_obj.gmail_imap.imap, GmailPolling_obj.gmail_imap)
             idler.start()
             # Because this is just an example, exit after 1 minute.
-            time.sleep(10*60)
+            time.sleep(60*60*24)
         except Exception, e:
-            print("Eccezione: " + str(e))
+            logger.error("Eccezione (fermare l'app, rilanciarla e capire il misfatto): " + str(e))
         finally:
             # Clean up.
             idler.stop()

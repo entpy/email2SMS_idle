@@ -3,13 +3,16 @@
 from threading import *
 from datetime import date
 import logging, email
- 
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
 # https://gist.github.com/jexhson/3496039/
 # This is the threading object that does all the waiting on 
 # the event
 class Idler(object):
     def __init__(self, conn, gmail):
-        print("@@ init IDLE @@")
+        logger.info("@@ IDLE init @@")
         self.thread = Thread(target=self.idle)
         self.M = conn
         self.event = Event()
@@ -62,18 +65,7 @@ class Idler(object):
         # TODO
         # prelevo le nuove email arrivate, se sono di un determinato mittente
         # invio l'sms con l'oggetto dell'email (solo per determinate email)
-        print("Nuova email!")
-
-        # fetch and cache messages from inbox or other received mailbox
-        # response, results = self.M.uid('SEARCH', None, '(X-GM-THRID ' + self.thread_id + ')')
-        emails = self.gmail.inbox().mail(on=date.today(), unread=True)
-        for email in emails:
-            # prelevo i dati per ogni singola email (oggetto, testo, ...)
-            email.fetch()
-            # email subject
-            email_subject = email.subject
-            print("oggetto mail: " + str(email_subject))
-            # marco la mail come letta
-            email.read()
+        logger.info("Nuova email!")
+        self.gmail.get_unread_email_test()
 
         return True
