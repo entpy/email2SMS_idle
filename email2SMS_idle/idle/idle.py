@@ -60,11 +60,7 @@ class Idler(object):
                 self.dosync()
  
     # The method that gets called when a new email arrives. 
-    # Replace it with something better.
     def dosync(self):
-        # TODO
-        # prelevo le nuove email arrivate, se sono di un determinato mittente
-        # invio l'sms con l'oggetto dell'email (solo per determinate email)
         logger.info("Nuova email!")
         self.gmail.get_unread_email_test()
 

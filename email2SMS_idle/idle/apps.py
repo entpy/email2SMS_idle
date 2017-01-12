@@ -24,9 +24,8 @@ class IdleConfig(AppConfig):
         # went a little wrong.....
         try:
             GmailPolling_obj = GmailPolling()
-            GmailPolling_obj.gmail_imap.inbox()
             # Start the Idler thread
-            idler = Idler(GmailPolling_obj.gmail_imap.imap, GmailPolling_obj.gmail_imap)
+            idler = Idler(GmailPolling_obj.gmail_imap.imap, GmailPolling_obj)
             idler.start()
             # Because this is just an example, exit after 1 minute.
             # time.sleep(60*60*24)
