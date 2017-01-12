@@ -24,6 +24,7 @@ class Idler(object):
     def stop(self):
         # This is a neat trick to make thread end. Took me a 
         # while to figure that one out!
+        logger.info("@@ stop thread IDLE @@")
         self.event.set()
  
     def join(self):
