@@ -17,9 +17,6 @@ class Idler(object):
         self.M = conn
         self.event = Event()
         self.gmail = gmail
-
-        # init della inbox
-        self.M.inbox()
  
     def start(self):
         self.thread.start()
