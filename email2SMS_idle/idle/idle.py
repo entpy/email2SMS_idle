@@ -33,7 +33,7 @@ class Idler(object):
         # Starting an unending loop here
         cont = 0
         while True:
-            cont++
+            cont += 1
             # This is part of the trick to make the loop stop 
             # when the stop() command is given
             if self.event.isSet():
