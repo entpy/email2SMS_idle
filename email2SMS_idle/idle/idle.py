@@ -61,7 +61,7 @@ class Idler(object):
                 self.event.clear()
                 self.dosync()
 
-            if cont > 10000:
+            if cont > 1000:
                 logger.info("check")
                 cont = 0
  
