@@ -13,7 +13,7 @@ class IdleConfig(AppConfig):
     name = 'idle'
 
     def ready(self):
-        print("applicazione avviata")
+        logger.info("email2SMS_idle avviata...")
         self.init_idle()
 
         return True
@@ -38,6 +38,6 @@ class IdleConfig(AppConfig):
             idler.join()
             # This is important!
             GmailPolling_obj.gmail_imap.logout()
-            print("IDLE terminato")
+            logger.info("IDLE terminato")
 
         return True
