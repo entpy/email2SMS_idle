@@ -29,10 +29,9 @@ class IdleConfig(AppConfig):
             idler = Idler(GmailPolling_obj.gmail_imap.imap, GmailPolling_obj.gmail_imap)
             idler.start()
             # Because this is just an example, exit after 1 minute.
-            time.sleep(60*60*24)
+            # time.sleep(60*60*24)
         except Exception, e:
             logger.error("Eccezione (fermare l'app, rilanciarla e capire il misfatto): " + str(e))
-        finally:
             # Clean up.
             idler.stop()
             idler.join()
