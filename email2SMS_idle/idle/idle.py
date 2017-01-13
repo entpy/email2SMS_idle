@@ -14,6 +14,7 @@ class Idler(object):
     def __init__(self, conn, gmail):
         logger.info("@@ IDLE init @@")
         self.thread = Thread(target=self.idle)
+        self.thread.setDaemon(True) # questo dovrebbe killare il thread quando viene killata l'app
         self.M = conn
         self.event = Event()
         self.gmail = gmail
@@ -28,6 +29,7 @@ class Idler(object):
         self.event.set()
  
     def join(self):
+        logger.info("@@ join thread IDLE @@")
         self.thread.join()
  
     def idle(self):

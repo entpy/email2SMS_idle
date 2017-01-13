@@ -15,7 +15,6 @@ class IdleConfig(AppConfig):
     def ready(self):
         logger.info("email2SMS_idle avviata...")
         self.init_idle()
-
         return True
 
     def init_idle(self):
@@ -30,7 +29,7 @@ class IdleConfig(AppConfig):
             idler.start()
             # Because this is just an example, exit after 1 minute.
             # time.sleep(60*60*24)
-        except (KeyboardInterrupt, SystemExit, Exception) as e:
+        except Exception, e:
             logger.error("Eccezione (fermare l'app, rilanciarla e capire il misfatto): " + str(e))
             # Clean up.
             idler.stop()
