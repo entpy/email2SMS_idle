@@ -71,7 +71,7 @@ class GmailPolling():
             email_subject = email.subject
             # se c'è un allarme o un allarme è stato disattivato
             # marco la mail come letta
-            # email.read()
+            email.read()
             logger.info("oggetto email: " + str(email_subject))
 
         # fix per far riscaricare i messaggi della inbox, la libreria cachava tutto e se
