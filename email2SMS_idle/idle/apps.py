@@ -29,7 +29,7 @@ class IdleConfig(AppConfig):
             idler.start()
             # Because this is just an example, exit after 1 minute.
             # time.sleep(60*60*24)
-        except Exception as e:
+        except BaseException as e:
             logger.error("Eccezione (fermare l'app, rilanciarla e capire il misfatto): " + str(e))
             # Clean up.
             idler.stop()
