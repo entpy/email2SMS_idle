@@ -14,7 +14,7 @@ class Idler(object):
     def __init__(self, conn, gmail):
         logger.info("@@ IDLE init @@")
         self.thread = Thread(target=self.idle)
-        self.thread.setDaemon(True) # questo dovrebbe killare il thread quando viene killata l'app
+        # self.thread.setDaemon(True) # questo dovrebbe killare il thread quando viene killata l'app
         self.M = conn
         self.event = Event()
         self.gmail = gmail
@@ -82,5 +82,11 @@ class Idler(object):
 
     def kill_thread(self):
         """Loop shutdown"""
-        logger.error("Shutdown del loop")
+        logger.error("Inizio procedura di shutdown del loop...")
+        # Clean up.
+        self.stop()
+        self.join()
+        # This is important!
+        self.gmail.gmail_imap.logout()
+        logger.info("Fine procedura di shutdown del loop")
         return True

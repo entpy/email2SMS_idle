@@ -1,10 +1,11 @@
-import re
-import imaplib2
-# import socket
+import re, imaplib2, logging
 
 from mailbox import Mailbox
 from utf import encode as encode_utf7, decode as decode_utf7
 from exceptions import *
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 class Gmail():
     # GMail IMAP defaults
@@ -135,6 +136,7 @@ class Gmail():
         self.imap.close()
         self.imap.logout()
         self.logged_in = False
+        logger.info("Logout da IMAP effettuato con successo")
 
 
     def label(self, label_name):
