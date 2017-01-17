@@ -67,5 +67,20 @@ class Idler(object):
     def dosync(self):
         logger.info("Nuova email!")
         self.gmail.get_unread_email_test()
+        return True
 
+    def is_alive(self):
+        """Function to check if process is alive"""
+        logger.info("IDLE is alive")
+        return True
+
+    def periodic_task_crashed(self, exception):
+        """Loop error"""
+        logger.error("Errore nel loop (fermare l'app, rilanciarla e capire il misfatto): " + str(exception))
+        # TODO: mandare sms e email per notificare l'errore
+        return True
+
+    def kill_thread(self):
+        """Loop shutdown"""
+        logger.error("Shutdown del loop")
         return True

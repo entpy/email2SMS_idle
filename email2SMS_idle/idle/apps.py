@@ -4,11 +4,14 @@ from __future__ import unicode_literals, print_function
 from django.apps import AppConfig
 from idle import Idler
 from polling import GmailPolling
+from twisted.internet.task import LoopingCall
+from crochet import setup
 import logging, time
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+setup()
 class IdleConfig(AppConfig):
     name = 'idle'
 
@@ -29,6 +32,13 @@ class IdleConfig(AppConfig):
             idler.start()
             # Because this is just an example, exit after 1 minute.
             # time.sleep(60*60*24)
+            # watchdog del processo
+            background_loop = LoopingCall(idler.is_alive)
+            # avvia il watchdog subito e quindi ogni 60 secondi
+            reactor = background_loop.start(60, now=True)
+            # callback in caso di errore
+            reactor.addErrback(idler.periodic_task_crashed)
+            # reactor.addSystemEventTrigger("after", "shutdown", idler.kill_thread)
         except BaseException as e:
             logger.error("Eccezione (fermare l'app, rilanciarla e capire il misfatto): " + str(e))
             # Clean up.
