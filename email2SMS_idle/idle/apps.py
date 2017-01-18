@@ -18,37 +18,24 @@ class IdleConfig(AppConfig):
 
     def ready(self):
         logger.info("email2SMS_idle avviata...")
-        self.init_idle()
-        return True
-
-    def init_idle(self):
-        #""Function to init imap idle""
-        # Had to do this stuff in a try-finally, since some testing 
-        # went a little wrong.....
         try:
             GmailPolling_obj = GmailPolling()
             GmailPolling_obj.gmail_imap.inbox()
-            # Start the Idler thread
+            # Thread per avviare la funzione idle
             idler = Idler(GmailPolling_obj.gmail_imap.imap, GmailPolling_obj)
             idler.start()
-            # Because this is just an example, exit after 1 minute.
-            # time.sleep(60*60*24)
             # watchdog del processo
-            """
-            l = task.LoopingCall(idler.is_alive)
-            l.start(1.0) # call every sixty seconds
-            reactor.addSystemEventTrigger("after", "shutdown", idler.kill_thread, reactor)
-            reactor.run()
-            """
             background_loop = task.LoopingCall(idler.is_alive)
-            # avvia il watchdog subito e quindi ogni 60 secondi
+            # utilizzando Crochet posso mettere in background il loop
+            # (altrimenti bloccante con Twisted) e permettere all'app di
+            # Django di avviarsi
+            # avvio del watchdog del processo (subito e quindi ogni x secondi)
             crochet_reactor = background_loop.start(60, now=True)
-            # callback in caso di errore
+            # callback in caso di terminazione loop (CTRL^C) -> effettuo shutdown di idle
             reactor.addSystemEventTrigger("after", "shutdown", idler.kill_thread)
+            # in caso di errore nel loop chiamo questa callback
             crochet_reactor.addErrback(idler.periodic_task_crashed)
-            # reactor.addSystemEventTrigger("after", "shutdown", idler.kill_thread)
         except BaseException as e:
             logger.error("Eccezione (fermare l'app, rilanciarla e capire il misfatto): " + str(e))
             idler.kill_thread()
-
         return True
