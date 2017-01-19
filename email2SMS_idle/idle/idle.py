@@ -34,45 +34,49 @@ class Idler(object):
  
     def idle(self):
         # Starting an unending loop here
-        while True:
-            logger.info("metto in attesa con il comando IDLE")
-            # This is part of the trick to make the loop stop 
-            # when the stop() command is given
-            if self.event.isSet():
-                return
-            self.needsync = False
-            # A callback method that gets called when a new 
-            # email arrives. Very basic, but that's good.
-            def callback(args):
-                if not self.event.isSet():
-                    self.needsync = True
-                    self.event.set()
-            try:
+        try:
+            while True:
+                logger.info("metto in attesa con il comando IDLE")
+                # This is part of the trick to make the loop stop 
+                # when the stop() command is given
+                if self.event.isSet():
+                    return
+                self.needsync = False
+                # A callback method that gets called when a new 
+                # email arrives. Very basic, but that's good.
+                def callback(args):
+                    if not self.event.isSet():
+                        self.needsync = True
+                        self.event.set()
                 # Do the actual idle call. This returns immediately, 
                 # since it's asynchronous.
                 self.M.idle(callback=callback)
-            except BaseException as e:
-                logger.error("Errore nel comando IDLE: " + str(e))
-                self.kill_thread()
-            # This waits until the event is set. The event is 
-            # set by the callback, when the server 'answers' 
-            # the idle call and the callback function gets 
-            # called.
-            logger.info("IDLE in attesa di nuove email")
-            self.event.wait()
-            logger.info("dovrebbero esserci nuove email")
-            # Because the function sets the needsync variable,
-            # this helps escape the loop without doing 
-            # anything if the stop() is called. Kinda neat 
-            # solution.
-            if self.needsync:
-                self.event.clear()
-                self.dosync()
+                # This waits until the event is set. The event is 
+                # set by the callback, when the server 'answers' 
+                # the idle call and the callback function gets 
+                # called.
+                logger.info("IDLE in attesa di nuove email")
+                self.event.wait()
+                logger.info("dovrebbero esserci nuove email")
+                # Because the function sets the needsync variable,
+                # this helps escape the loop without doing 
+                # anything if the stop() is called. Kinda neat 
+                # solution.
+                if self.needsync:
+                    self.event.clear()
+                    self.dosync()
+        except BaseException as e:
+            logger.error("Errore nel comando IDLE: " + str(e))
+            self.kill_thread()
  
     # The method that gets called when a new email arrives. 
     def dosync(self):
         logger.info("nuova/e email!")
-        self.gmail.get_unread_email_test()
+        try:
+            self.gmail.get_unread_email_test()
+        except BaseException as e:
+            logger.error("Errore in dosync: " + str(e))
+            self.kill_thread()
         return True
 
     def is_alive(self):
