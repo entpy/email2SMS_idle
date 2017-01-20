@@ -34,44 +34,52 @@ class Idler(object):
  
     def idle(self):
         # Starting an unending loop here
-        try:
-            while True:
-                logger.info("metto in attesa con il comando IDLE")
-                # This is part of the trick to make the loop stop 
-                # when the stop() command is given
-                if self.event.isSet():
-                    return
-                self.needsync = False
-                # A callback method that gets called when a new 
-                # email arrives. Very basic, but that's good.
-                def callback(args):
-                    if not self.event.isSet():
-                        self.needsync = True
-                        self.event.set()
-                # Do the actual idle call. This returns immediately, 
-                # since it's asynchronous.
+        while True:
+            logger.info("metto in attesa con il comando IDLE")
+            # This is part of the trick to make the loop stop 
+            # when the stop() command is given
+            if self.event.isSet():
+                return
+            self.needsync = False
+            # A callback method that gets called when a new 
+            # email arrives. Very basic, but that's good.
+            def callback(args):
+                result, arg, exc = args
+                if result is None:
+                    logger.error("There was an error during IDLE: " + str(exc))
+                    self.error = exc
+                    self.event.set()
+                elif not self.event.isSet():
+                    self.needsync = True
+                    self.event.set()
+            # Do the actual idle call. This returns immediately, 
+            # since it's asynchronous.
+            try:
                 self.M.idle(callback=callback)
-                # This waits until the event is set. The event is 
-                # set by the callback, when the server 'answers' 
-                # the idle call and the callback function gets 
-                # called.
-                logger.info("IDLE in attesa di nuove email")
-                self.event.wait()
-                logger.info("dovrebbero esserci nuove email")
-                # Because the function sets the needsync variable,
-                # this helps escape the loop without doing 
-                # anything if the stop() is called. Kinda neat 
-                # solution.
-                if self.needsync:
-                    self.event.clear()
-                    self.dosync()
-        except BaseException as e:
-            logger.error("Errore nel comando IDLE: " + str(e))
-            logger.error("trace: " + str(traceback.format_exc()))
-            self.kill_thread()
+            except BaseException as e:
+                logger.error("Errore nel comando IDLE: " + str(e))
+                logger.error("trace: " + str(traceback.format_exc()))
+                self.kill_thread()
+            # This waits until the event is set. The event is 
+            # set by the callback, when the server 'answers' 
+            # the idle call and the callback function gets 
+            # called.
+            logger.info("IDLE in attesa di nuove email")
+            self.event.wait()
+            logger.info("dovrebbero esserci nuove email")
+            # Because the function sets the needsync variable,
+            # this helps escape the loop without doing 
+            # anything if the stop() is called. Kinda neat 
+            # solution.
+            if self.needsync:
+                self.event.clear()
+                self.dosync()
  
     # The method that gets called when a new email arrives. 
     def dosync(self):
+        """
+        http://stackoverflow.com/questions/16622132/imaplib2-imap-gmail-com-handler-bye-response-system-error
+        """
         logger.info("nuova/e email!")
         try:
             self.gmail.idle_callback()
@@ -102,3 +110,35 @@ class Idler(object):
         self.gmail.gmail_imap.logout()
         logger.info("Fine procedura di shutdown del loop")
         return True
+
+"""
+vecchia callback
+def callback(args):
+    if not self.event.isSet():
+        self.needsync = True
+        self.event.set()
+"""
+
+"""
+From imaplib2s documentation:
+
+If 'callback' is provided then the command is asynchronous, so after
+the command is queued for transmission, the call returns immediately
+with the tuple (None, None).
+The result will be posted by invoking "callback" with one arg, a tuple:
+callback((result, cb_arg, None))
+or, if there was a problem:
+callback((None, cb_arg, (exception class, reason)))
+
+This means your call back needs to look at it's arguments:
+
+            def callback(args):
+                result, arg, exc = args
+                if result is None:
+                    print("There was an error during IDLE:", str(exc))
+                    self.error = exc
+                    self.event.set()
+                else:
+                    self.needsync = True
+                    self.event.set()
+"""
