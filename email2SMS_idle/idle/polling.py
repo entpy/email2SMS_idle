@@ -2,7 +2,7 @@
 
 from email2SMS_idle import local_settings
 from datetime import date
-import datetime, logging, json, time, gmail
+import datetime, logging, json, time, gmail, traceback
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -21,22 +21,26 @@ class GmailPolling():
         self.gmail_imap = gmail.login(local_settings.c1, local_settings.c2)
         return True
 
-    """
-    def sync(self):
-        #""Function performed when idle notify a new email""
+    def idle_callback(self):
+        """Function performed when idle notify new emails"""
         try:
             # logger.info("check email")
-            self.get_unread_email_test()
-        except self.gmail_imap.imap.abort, e:
+            # self.mail2sms()
+            self.mail2sms_test()
+        # except self.gmail_imap.imap.abort, e:
+        except BaseException as e:
             # probabilmente un timeout della connessione, provo a riconnettermi (logout + nuova connessione)
-            logger.error("@@ Connessione scaduta, provo a riconnettermi senza interrompere il loop di Twisted: " + str(e))
-            self.gmail_imap.logout()
-            self.init_connection()
-            # TODO: mandare una mail con traccia dell'accaduto
+            logger.error("@@ Errore in read_email_and_send_sms:")
+            logger.error("msg: " + str(e.message))
+            logger.error("args: " + str(e.args))
+            logger.error("class: " + str(e.__class__.__name__))
+            logger.error("trace: " + str(traceback.format_exc()))
+            # self.gmail_imap.logout()
+            # self.init_connection()
+            # TODO: mi riconnetto e provo a rifare la lettura di eventuali nuove email
         return True
-    """
 
-    def get_unread_email(self):
+    def mail2sms(self):
         """List of unread email"""
         # prelevo l'elenco di email in base a determinati criteri
         # emails = self.gmail_imap.inbox().mail(on=date.today(), unread=True, sender=local_settings.sender)
@@ -60,7 +64,7 @@ class GmailPolling():
         self.gmail_imap.fetch_mailboxes()
         return True
 
-    def get_unread_email_test(self):
+    def mail2sms_test(self):
         """List of unread email"""
         # prelevo l'elenco di email in base a determinati criteri
         emails = self.gmail_imap.inbox().mail(on=date.today(), unread=True)

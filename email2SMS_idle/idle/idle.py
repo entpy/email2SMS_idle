@@ -2,7 +2,7 @@
 
 from threading import *
 from datetime import date
-import logging, email
+import logging, email, traceback
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -67,15 +67,17 @@ class Idler(object):
                     self.dosync()
         except BaseException as e:
             logger.error("Errore nel comando IDLE: " + str(e))
+            logger.error("trace: " + str(traceback.format_exc()))
             self.kill_thread()
  
     # The method that gets called when a new email arrives. 
     def dosync(self):
         logger.info("nuova/e email!")
         try:
-            self.gmail.get_unread_email_test()
+            self.gmail.idle_callback()
         except BaseException as e:
             logger.error("Errore in dosync: " + str(e))
+            logger.error("trace: " + str(traceback.format_exc()))
             self.kill_thread()
         return True
 
