@@ -60,6 +60,15 @@ class Idler(object):
                 logger.error("Errore nel comando IDLE: " + str(e))
                 logger.error("trace: " + str(traceback.format_exc()))
                 self.kill_thread()
+            except self.M.abort as e:
+                # TODO
+                # disconnessione, tento di recuperare riconettendomi
+                self.gmail.gmail_imap.logout()
+                self.gmail.init_connection()
+                # assegno la nuova connessione al thread per poter rifare l'idle
+                self.M = self.gmail.gmail_imap.imap
+                logger.error("Errore di disconnessione, tento di recuperare riconettendomi: " + str(e))
+
             # This waits until the event is set. The event is 
             # set by the callback, when the server 'answers' 
             # the idle call and the callback function gets 
