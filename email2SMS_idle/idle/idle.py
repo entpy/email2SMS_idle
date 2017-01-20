@@ -47,7 +47,10 @@ class Idler(object):
                 result, arg, exc = args
                 if result is None:
                     logger.error("There was an error during IDLE: " + str(exc))
-                    self.error = exc
+                    # self.error = exc
+                    # self.event.set()
+                    self.idle_recovery()
+                    self.needsync = True
                     self.event.set()
                 elif not self.event.isSet():
                     self.needsync = True
@@ -63,6 +66,7 @@ class Idler(object):
             except self.M.abort as e:
                 # TODO
                 logger.error("Errore di disconnessione, tento di recuperare riconettendomi: " + str(e))
+                """
                 # disconnessione, tento di recuperare riconettendomi
                 self.gmail.gmail_imap.logout()
                 self.gmail.init_connection()
@@ -70,6 +74,7 @@ class Idler(object):
                 self.M = self.gmail.gmail_imap.imap
                 # rieffettuo l'idle
                 self.M.idle(callback=callback)
+                """
 
             # This waits until the event is set. The event is 
             # set by the callback, when the server 'answers' 
@@ -120,6 +125,15 @@ class Idler(object):
         # This is important!
         self.gmail.gmail_imap.logout()
         logger.info("Fine procedura di shutdown del loop")
+        return True
+
+    def idle_recovery(self):
+        """Try to recover an idle session"""
+        # mi disconnetto e riconnetto via imap al provider
+        self.gmail.gmail_imap.logout()
+        self.gmail.init_connection()
+        # assegno la nuova connessione al thread per poter rifare l'idle
+        self.M = self.gmail.gmail_imap.imap
         return True
 
 """
