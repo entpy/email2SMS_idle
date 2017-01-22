@@ -47,11 +47,12 @@ class Idler(object):
                 result, arg, exc = args
                 if result is None:
                     logger.error("There was an error during IDLE: " + str(exc))
+                    logger.error("trace: " + str(traceback.format_exc()))
                     # self.error = exc
                     # self.event.set()
                     self.idle_recovery()
-                    self.needsync = True
-                    self.event.set()
+                    self.event.clear()
+                    raise self.M.abort
                 elif not self.event.isSet():
                     self.needsync = True
                     self.event.set()
@@ -130,10 +131,12 @@ class Idler(object):
     def idle_recovery(self):
         """Try to recover an idle session"""
         # mi disconnetto e riconnetto via imap al provider
+        logger.info("Tento di recuperare la connessione")
         self.gmail.gmail_imap.logout()
         self.gmail.init_connection()
         # assegno la nuova connessione al thread per poter rifare l'idle
         self.M = self.gmail.gmail_imap.imap
+        self.idle()
         return True
 
 """
