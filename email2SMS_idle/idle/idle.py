@@ -57,16 +57,6 @@ class Idler(object):
             # Do the actual idle call. This returns immediately, 
             # since it's asynchronous.
             self.M.idle(callback=callback)
-            # TODO
-            """
-            # disconnessione, tento di recuperare riconettendomi
-            self.gmail.gmail_imap.logout()
-            self.gmail.init_connection()
-            # assegno la nuova connessione al thread per poter rifare l'idle
-            self.M = self.gmail.gmail_imap.imap
-            # rieffettuo l'idle
-            self.M.idle(callback=callback)
-            """
 
             # This waits until the event is set. The event is 
             # set by the callback, when the server 'answers' 
@@ -75,6 +65,19 @@ class Idler(object):
             logger.info("IDLE in attesa di nuove email")
             self.event.wait()
             logger.info("dovrebbero esserci nuove email")
+
+            # gestisco alcuni errori, tra i quali il timeout della connessione
+            if self.error:
+                try:
+                    raise self.error
+                except self.M.abort as e:
+                    logger.error("errore di abort della connessione di imap (es timeout)")
+                    # tento il recupero della connessione
+                    self.idle_recovery()
+                    # forzo una ri-sincronizzazione
+                    self.needsync = True
+                    # pulisco il flag degli errori
+                    self.error = None
             # Because the function sets the needsync variable,
             # this helps escape the loop without doing 
             # anything if the stop() is called. Kinda neat 
@@ -83,21 +86,6 @@ class Idler(object):
                 self.event.clear()
                 self.dosync()
 
-            if self.error:
-                # gestisco l'eccezione
-                # self.manage_exception(self.error)
-                try:
-                    raise self.error
-                except self.M.abort as e:
-                    logger.error("errore di abort della connessione di imap")
-                    # tento il recupero della connessione
-                    self.idle_recovery()
-                    # forzo una ri-sincronizzazione
-                    self.dosync()
-                    # pulisco lo status del thread e il flag degli errori
-                    self.event.clear()
-                    self.error = None
- 
     # The method that gets called when a new email arrives. 
     def dosync(self):
         """
