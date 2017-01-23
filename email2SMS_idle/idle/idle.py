@@ -33,6 +33,7 @@ class Idler(object):
         self.thread.join()
  
     def idle(self):
+        self.error = None # flag degli errori
         # Starting an unending loop here
         while True:
             logger.info("metto in attesa con il comando IDLE")
@@ -48,34 +49,24 @@ class Idler(object):
                 if result is None:
                     logger.error("There was an error during IDLE: " + str(exc))
                     logger.error("trace: " + str(traceback.format_exc()))
-                    # self.error = exc
-                    # self.event.set()
-                    self.idle_recovery()
-                    self.event.clear()
-                    raise self.M.abort
+                    self.error = exc
+                    self.event.set()
                 elif not self.event.isSet():
                     self.needsync = True
                     self.event.set()
             # Do the actual idle call. This returns immediately, 
             # since it's asynchronous.
-            try:
-                self.M.idle(callback=callback)
-            except BaseException as e:
-                logger.error("Errore nel comando IDLE: " + str(e))
-                logger.error("trace: " + str(traceback.format_exc()))
-                self.kill_thread()
-            except self.M.abort as e:
-                # TODO
-                logger.error("Errore di disconnessione, tento di recuperare riconettendomi: " + str(e))
-                """
-                # disconnessione, tento di recuperare riconettendomi
-                self.gmail.gmail_imap.logout()
-                self.gmail.init_connection()
-                # assegno la nuova connessione al thread per poter rifare l'idle
-                self.M = self.gmail.gmail_imap.imap
-                # rieffettuo l'idle
-                self.M.idle(callback=callback)
-                """
+            self.M.idle(callback=callback)
+            # TODO
+            """
+            # disconnessione, tento di recuperare riconettendomi
+            self.gmail.gmail_imap.logout()
+            self.gmail.init_connection()
+            # assegno la nuova connessione al thread per poter rifare l'idle
+            self.M = self.gmail.gmail_imap.imap
+            # rieffettuo l'idle
+            self.M.idle(callback=callback)
+            """
 
             # This waits until the event is set. The event is 
             # set by the callback, when the server 'answers' 
@@ -91,6 +82,21 @@ class Idler(object):
             if self.needsync:
                 self.event.clear()
                 self.dosync()
+
+            if self.error:
+                # gestisco l'eccezione
+                # self.manage_exception(self.error)
+                try:
+                    raise self.error
+                except self.M.abort as e:
+                    logger.error("errore di abort della connessione di imap")
+                    # tento il recupero della connessione
+                    self.idle_recovery()
+                    # forzo una ri-sincronizzazione
+                    self.dosync()
+                    # pulisco lo status del thread e il flag degli errori
+                    self.event.clear()
+                    self.error = None
  
     # The method that gets called when a new email arrives. 
     def dosync(self):
@@ -136,7 +142,6 @@ class Idler(object):
         self.gmail.init_connection()
         # assegno la nuova connessione al thread per poter rifare l'idle
         self.M = self.gmail.gmail_imap.imap
-        self.idle()
         return True
 
 """
