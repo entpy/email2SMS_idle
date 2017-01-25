@@ -18,6 +18,8 @@ class Idler(object):
         self.M = conn
         self.event = Event()
         self.gmail = gmail
+        self.error_count = 0
+        self.enable_error_debug = False
  
     def start(self):
         self.thread.start()
@@ -45,10 +47,18 @@ class Idler(object):
             # A callback method that gets called when a new 
             # email arrives. Very basic, but that's good.
             def callback(args):
+                logger.error("Chiamo la callback di idle")
                 result, arg, exc = args
+                self.error_count += 1
+
+                # per debuggare l'errore di abort
+                if self.error_count > 1 and self.enable_error_debug:
+                    exc = self.M.abort('connection closed')
+                    result = None
+
                 if result is None:
                     logger.error("There was an error during IDLE: " + str(exc))
-                    logger.error("trace: " + str(traceback.format_exc()))
+                    # logger.error("trace: " + str(traceback.format_exc()))
                     self.error = exc
                     self.event.set()
                 elif not self.event.isSet():
@@ -71,13 +81,18 @@ class Idler(object):
                 try:
                     raise self.error
                 except self.M.abort as e:
-                    logger.error("errore di abort della connessione di imap (es timeout)")
+                    logger.info("1 errore di abort della connessione di imap (es timeout)")
                     # tento il recupero della connessione
                     self.idle_recovery()
                     # forzo una ri-sincronizzazione
+                    logger.info("1 self.needsync = True")
                     self.needsync = True
                     # pulisco il flag degli errori
+                    logger.info("1 self.error = None")
                     self.error = None
+                finally:
+                    logger.info("connessione recuperata")
+                    logger.info("needsync? " + str(self.needsync))
             # Because the function sets the needsync variable,
             # this helps escape the loop without doing 
             # anything if the stop() is called. Kinda neat 
@@ -125,11 +140,16 @@ class Idler(object):
     def idle_recovery(self):
         """Try to recover an idle session"""
         # mi disconnetto e riconnetto via imap al provider
-        logger.info("Tento di recuperare la connessione")
+        logger.info("2 Tento di recuperare la connessione")
+        logger.info("2 self.gmail.gmail_imap.logout()")
         self.gmail.gmail_imap.logout()
+        logger.info("2 self.gmail.init_connection()")
         self.gmail.init_connection()
         # assegno la nuova connessione al thread per poter rifare l'idle
+        logger.info("2 self.M = self.gmail.gmail_imap.imap")
         self.M = self.gmail.gmail_imap.imap
+        # resetto il flag di debug per gli errori
+        self.error_count = 0
         return True
 
 """
