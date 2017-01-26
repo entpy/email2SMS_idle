@@ -90,7 +90,7 @@ class Idler(object):
                     # pulisco il flag degli errori
                     logger.info("1 self.error = None")
                     self.error = None
-                else:
+                finally:
                     logger.info("connessione recuperata")
                     logger.info("needsync? " + str(self.needsync))
             # Because the function sets the needsync variable,
