@@ -147,14 +147,14 @@ class Idler(object):
             self.gmail.gmail_imap.logout()
         except BaseException as e:
             logger.error("2 ERRORE IN self.gmail.gmail_imap.logout(): " + str(e))
-
-        logger.info("2 self.gmail.init_connection()")
-        self.gmail.init_connection()
-        # assegno la nuova connessione al thread per poter rifare l'idle
-        logger.info("2 self.M = self.gmail.gmail_imap.imap")
-        self.M = self.gmail.gmail_imap.imap
-        # resetto il flag di debug per gli errori
-        self.error_count = 0
+        else:
+            logger.info("2 self.gmail.init_connection()")
+            self.gmail.init_connection()
+            # assegno la nuova connessione al thread per poter rifare l'idle
+            logger.info("2 self.M = self.gmail.gmail_imap.imap")
+            self.M = self.gmail.gmail_imap.imap
+            # resetto il flag di debug per gli errori
+            self.error_count = 0
         return True
 
 """
