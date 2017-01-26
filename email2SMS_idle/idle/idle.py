@@ -20,6 +20,7 @@ class Idler(object):
         self.gmail = gmail
         self.error_count = 0
         self.enable_error_debug = False
+        self.error = None # flag degli errori
  
     def start(self):
         self.thread.start()
@@ -35,7 +36,6 @@ class Idler(object):
         self.thread.join()
  
     def idle(self):
-        self.error = None # flag degli errori
         # Starting an unending loop here
         while True:
             logger.info("metto in attesa con il comando IDLE")
@@ -90,7 +90,7 @@ class Idler(object):
                     # pulisco il flag degli errori
                     logger.info("1 self.error = None")
                     self.error = None
-                finally:
+                else:
                     logger.info("connessione recuperata")
                     logger.info("needsync? " + str(self.needsync))
             # Because the function sets the needsync variable,
@@ -118,6 +118,9 @@ class Idler(object):
     def is_alive(self):
         """Function to check if process is alive"""
         logger.info("IDLE is alive")
+
+        # self.gmail.gmail_imap.imap.Terminate = True
+        # self.gmail.gmail_imap.imap._handler()
         return True
 
     def periodic_task_crashed(self, exception):
@@ -147,7 +150,7 @@ class Idler(object):
             self.gmail.gmail_imap.logout()
         except BaseException as e:
             logger.error("2 ERRORE IN self.gmail.gmail_imap.logout(): " + str(e))
-        else:
+        finally:
             logger.info("2 self.gmail.init_connection()")
             self.gmail.init_connection()
             # assegno la nuova connessione al thread per poter rifare l'idle

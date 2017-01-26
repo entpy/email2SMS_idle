@@ -99,12 +99,14 @@ class Gmail():
         self.password = password
 
         if not self.imap:
+            logger.debug("connessione via imap")
             self.connect()
 
         try:
             imap_login = self.imap.login(self.username, self.password)
             self.logged_in = (imap_login and imap_login[0] == 'OK')
             if self.logged_in:
+                logger.debug("elenco di tutte le mailbox")
                 self.fetch_mailboxes()
         except imaplib2.IMAP4.error:
             raise AuthenticationError
