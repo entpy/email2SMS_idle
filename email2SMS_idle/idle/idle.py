@@ -141,8 +141,13 @@ class Idler(object):
         """Try to recover an idle session"""
         # mi disconnetto e riconnetto via imap al provider
         logger.info("2 Tento di recuperare la connessione")
-        logger.info("2 self.gmail.gmail_imap.logout()")
-        self.gmail.gmail_imap.logout()
+
+        try:
+            logger.info("2 self.gmail.gmail_imap.logout()")
+            self.gmail.gmail_imap.logout()
+        except BaseException as e:
+            logger.error("2 ERRORE IN self.gmail.gmail_imap.logout(): " + str(e))
+
         logger.info("2 self.gmail.init_connection()")
         self.gmail.init_connection()
         # assegno la nuova connessione al thread per poter rifare l'idle
