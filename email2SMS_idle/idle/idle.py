@@ -18,7 +18,6 @@ class Idler(object):
         self.M = conn
         self.event = Event()
         self.gmail = gmail
-        self.error_count = 0
         self.enable_error_debug = False
         self.error = None # flag degli errori
  
@@ -49,12 +48,6 @@ class Idler(object):
             def callback(args):
                 logger.error("Chiamo la callback di idle")
                 result, arg, exc = args
-                self.error_count += 1
-
-                # per debuggare l'errore di abort
-                if self.error_count > 1 and self.enable_error_debug:
-                    exc = self.M.abort('connection closed')
-                    result = None
 
                 if result is None:
                     logger.error("There was an error during IDLE: " + str(exc))
@@ -90,9 +83,12 @@ class Idler(object):
                     # pulisco il flag degli errori
                     logger.info("1 self.error = None")
                     self.error = None
-                finally:
                     logger.info("connessione recuperata")
+                except BaseException as e:
+                    logger.error("1 errore nel recupero della connessione: " + str(e))
+                finally:
                     logger.info("needsync? " + str(self.needsync))
+
             # Because the function sets the needsync variable,
             # this helps escape the loop without doing 
             # anything if the stop() is called. Kinda neat 
@@ -119,8 +115,10 @@ class Idler(object):
         """Function to check if process is alive"""
         logger.info("IDLE is alive")
 
-        # self.gmail.gmail_imap.imap.Terminate = True
-        # self.gmail.gmail_imap.imap._handler()
+        # per simulare il termine della connessione
+        if self.enable_error_debug:
+            self.gmail.gmail_imap.imap.Terminate = True
+            self.gmail.gmail_imap.imap._handler()
         return True
 
     def periodic_task_crashed(self, exception):
@@ -156,17 +154,7 @@ class Idler(object):
             # assegno la nuova connessione al thread per poter rifare l'idle
             logger.info("2 self.M = self.gmail.gmail_imap.imap")
             self.M = self.gmail.gmail_imap.imap
-            # resetto il flag di debug per gli errori
-            self.error_count = 0
         return True
-
-"""
-vecchia callback
-def callback(args):
-    if not self.event.isSet():
-        self.needsync = True
-        self.event.set()
-"""
 
 """
 From imaplib2s documentation:
@@ -178,8 +166,6 @@ The result will be posted by invoking "callback" with one arg, a tuple:
 callback((result, cb_arg, None))
 or, if there was a problem:
 callback((None, cb_arg, (exception class, reason)))
-
-This means your call back needs to look at it's arguments:
 
             def callback(args):
                 result, arg, exc = args
