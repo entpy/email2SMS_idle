@@ -37,7 +37,7 @@ class GmailPolling():
             logger.error("trace: " + str(traceback.format_exc()))
             # self.gmail_imap.logout()
             # self.init_connection()
-            # TODO: mi riconnetto e provo a rifare la lettura di eventuali nuove email
+            # mi riconnetto e provo a rifare la lettura di eventuali nuove email
         return True
 
     def mail2sms(self):
@@ -52,16 +52,12 @@ class GmailPolling():
             email_subject = email.subject
             # se c'è un allarme o un allarme è stato disattivato
             if email_subject.find("Allarme") > -1 or email_subject.find("Fin.All.") > -1:
-                # marco la mail come letta
-                email.read()
                 # invio l'sms
                 self.send_sms(text=email_subject)
-
-        # fix per far riscaricare i messaggi della inbox, la libreria cachava tutto e se
-        # arrivava un nuovo messaggio non veniva tirato giù, ho solo resettato alcuni campi
-        self.gmail_imap.mailboxes = {}
-        self.gmail_imap.current_mailbox = None
-        self.gmail_imap.fetch_mailboxes()
+                # marco la mail come letta
+                email.read()
+        # fix per far riscaricare i messaggi della inbox
+        self.clear_inbox_msg()
         return True
 
     def mail2sms_test(self):
@@ -77,12 +73,8 @@ class GmailPolling():
             # marco la mail come letta
             email.read()
             logger.info("oggetto email: " + str(email_subject))
-
-        # fix per far riscaricare i messaggi della inbox, la libreria cachava tutto e se
-        # arrivava un nuovo messaggio non veniva tirato giù, ho solo resettato alcuni campi
-        self.gmail_imap.mailboxes = {}
-        self.gmail_imap.current_mailbox = None
-        self.gmail_imap.fetch_mailboxes()
+        # fix per far riscaricare i messaggi della inbox
+        self.clear_inbox_msg()
         return True
 
     def send_sms(self, text):
@@ -94,16 +86,19 @@ class GmailPolling():
             response = client.send_message({'from': local_settings.from_name, 'to': "+39" + str(sms_number), 'text': text})
             response = response['messages'][0]
             if response['status'] == '0':
-              logger.info('Sent message ', response['message-id'])
-              logger.info('Remaining balance is ', response['remaining-balance'])
+                logger.info('Sent message ', response['message-id'])
+                logger.info('Remaining balance is ', response['remaining-balance'])
             else:
-              logger.error('SMS sending error: ', response['error-text'])
+                logger.error('SMS sending error: ', response['error-text'])
         return True
 
-    """
-    def periodic_task_crashed(self, exception):
-        #""Loop error""
-        logger.error("Errore nel loop (fermare l'app, rilanciarla e capire il misfatto): " + str(exception))
-        # TODO: mandare sms e email per notificare l'errore
+    def clear_inbox_msg(self):
+        """
+        Fix per far riscaricare i messaggi della inbox,
+        la libreria cachava tutto e se arrivava un nuovo 
+        messaggio non veniva tirato giù, ho solo resettato alcuni campi
+        """
+        self.gmail_imap.mailboxes = {}
+        self.gmail_imap.current_mailbox = None
+        self.gmail_imap.fetch_mailboxes()
         return True
-    """
