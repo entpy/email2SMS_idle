@@ -26,7 +26,7 @@ class GmailPolling():
         try:
             # logger.info("check email")
             # self.mail2sms()
-            self.mail2sms_test()
+            self.mail2sms()
         # except self.gmail_imap.imap.abort, e:
         except BaseException as e:
             # probabilmente un timeout della connessione, provo a riconnettermi (logout + nuova connessione)
@@ -44,7 +44,7 @@ class GmailPolling():
         """List of unread email"""
         # prelevo l'elenco di email in base a determinati criteri
         # emails = self.gmail_imap.inbox().mail(on=date.today(), unread=True, sender=local_settings.sender)
-        emails = self.gmail_imap.inbox().mail(on=date.today(), unread=True)
+        emails = self.gmail_imap.inbox().mail(on=date.today(), unread=True, sender=local_settings.sender)
         for email in emails:
             # prelevo i dati per ogni singola email (oggetto, testo, ...)
             email.fetch()
@@ -54,8 +54,9 @@ class GmailPolling():
             if email_subject.find("Allarme") > -1 or email_subject.find("Fin.All.") > -1:
                 # invio l'sms
                 self.send_sms(text=email_subject)
-                # marco la mail come letta
-                email.read()
+            # marco la mail come letta
+            email.read()
+            logger.info("oggetto email: " + str(email_subject))
         # fix per far riscaricare i messaggi della inbox
         self.clear_inbox_msg()
         return True
