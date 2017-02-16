@@ -2,7 +2,7 @@
 
 from email2SMS_idle import local_settings
 from datetime import date
-import datetime, logging, json, time, gmail, traceback
+import datetime, logging, json, time, gmail, traceback, nexmo
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class GmailPolling():
         # except self.gmail_imap.imap.abort, e:
         except BaseException as e:
             # probabilmente un timeout della connessione, provo a riconnettermi (logout + nuova connessione)
-            logger.error("@@ Errore in read_email_and_send_sms:")
+            logger.error("@@ Errore in idle_callback:")
             logger.error("msg: " + str(e.message))
             logger.error("args: " + str(e.args))
             logger.error("class: " + str(e.__class__.__name__))
@@ -51,12 +51,12 @@ class GmailPolling():
             # email subject
             email_subject = email.subject
             # se c'è un allarme o un allarme è stato disattivato
+            logger.info("oggetto email: " + str(email_subject))
             if email_subject.find("Allarme") > -1 or email_subject.find("Fin.All.") > -1:
                 # invio l'sms
                 self.send_sms(text=email_subject)
             # marco la mail come letta
             email.read()
-            logger.info("oggetto email: " + str(email_subject))
         # fix per far riscaricare i messaggi della inbox
         self.clear_inbox_msg()
         return True
