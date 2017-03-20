@@ -108,7 +108,16 @@ class Idler(object):
         except BaseException as e:
             logger.error("Errore in dosync: " + str(e))
             logger.error("trace: " + str(traceback.format_exc()))
-            self.kill_thread()
+            try:
+                # tento il recupero della connessione e riprovo
+                # a prelevare le email da leggere
+                self.idle_recovery()
+                self.gmail.idle_callback()
+            except BaseException as e:
+                logger.error("Doppio errore in dosync: " + str(e))
+                logger.error("trace: " + str(traceback.format_exc()))
+                # troppi errori, killo il thread
+                self.kill_thread()
         return True
 
     def is_alive(self):

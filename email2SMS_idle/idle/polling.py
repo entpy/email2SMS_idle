@@ -25,7 +25,6 @@ class GmailPolling():
         """Function performed when idle notify new emails"""
         try:
             # logger.info("check email")
-            # self.mail2sms()
             self.mail2sms()
         # except self.gmail_imap.imap.abort, e:
         except BaseException as e:
@@ -35,6 +34,7 @@ class GmailPolling():
             logger.error("args: " + str(e.args))
             logger.error("class: " + str(e.__class__.__name__))
             logger.error("trace: " + str(traceback.format_exc()))
+            raise
             # self.gmail_imap.logout()
             # self.init_connection()
             # mi riconnetto e provo a rifare la lettura di eventuali nuove email
