@@ -2,6 +2,8 @@
 
 from threading import *
 from datetime import date
+from django.core.mail import send_mail
+from email2SMS_idle import local_settings
 import logging, email, traceback
 
 # Get an instance of a logger
@@ -84,8 +86,16 @@ class Idler(object):
                     logger.info("1 self.error = None")
                     self.error = None
                     logger.info("connessione recuperata")
+
+                    # XXX
+                    # invio una email di notifica
+                    # rimuovere anche perchè l'invio
+                    # email occupa tempo
+                    self.send_admin_email(str(local_settings.subject_app_name) + ": errore di abort della connessione di imap (es timeout)", str(e) + "<br /><br /><b>Connessione recuperata</b>")
                 except BaseException as e:
                     logger.error("1 errore nel recupero della connessione: " + str(e))
+                    # invio una mail di notifica errore all'amministratore
+                    self.send_admin_email(str(local_settings.subject_app_name) + ": errore nel recupero della connessione", str(e))
                 finally:
                     logger.info("needsync? " + str(self.needsync))
 
@@ -106,16 +116,22 @@ class Idler(object):
         try:
             self.gmail.idle_callback()
         except BaseException as e:
+            error_traceback = str(traceback.format_exc())
             logger.error("Errore in dosync: " + str(e))
-            logger.error("trace: " + str(traceback.format_exc()))
+            logger.error("trace: " + error_traceback)
+            # invio una mail di notifica errore all'amministratore
+            self.send_admin_email(str(local_settings.subject_app_name) + ": errore in dosync", error_traceback)
             try:
                 # tento il recupero della connessione e riprovo
                 # a prelevare le email da leggere
                 self.idle_recovery()
                 self.gmail.idle_callback()
             except BaseException as e:
+                error_traceback = str(traceback.format_exc())
                 logger.error("Doppio errore in dosync: " + str(e))
-                logger.error("trace: " + str(traceback.format_exc()))
+                logger.error("trace: " + error_traceback)
+                # invio una mail di notifica errore all'amministratore
+                self.send_admin_email(str(local_settings.subject_app_name) + ": doppio errore in dosync", error_traceback)
                 # troppi errori, killo il thread
                 self.kill_thread()
         return True
@@ -164,6 +180,14 @@ class Idler(object):
             logger.info("2 self.M = self.gmail.gmail_imap.imap")
             self.M = self.gmail.gmail_imap.imap
         return True
+
+    def send_admin_email(self, subject, content):
+        """Function to send an info email to administrator"""
+        return_var = False
+        if subject and content:
+            send_mail(subject, content, str(local_settings.admin_email_from), [str(local_settings.admin_email_to)], fail_silently=True)
+            return_var = True
+        return return_var
 
 """
 From imaplib2s documentation:
