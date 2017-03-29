@@ -185,7 +185,7 @@ class Idler(object):
         """Function to send an info email to administrator"""
         return_var = False
         if subject and content:
-            send_mail(subject, content, str(local_settings.admin_email_from), [str(local_settings.admin_email_to)], fail_silently=True)
+            send_mail(subject, content, str(local_settings.admin_email_from), local_settings.admin_email_to, fail_silently=True)
             return_var = True
         return return_var
 
