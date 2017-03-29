@@ -149,7 +149,8 @@ class Idler(object):
     def periodic_task_crashed(self, exception):
         """Callback to manage Twisted loop error"""
         logger.error("Errore nel loop (fermare l'app, rilanciarla e capire il misfatto): " + str(exception))
-        # XXX: mandare sms e email per notificare l'errore
+        # invio una mail di notifica errore all'amministratore
+        self.send_admin_email(str(local_settings.subject_app_name) + ": Errore nel loop di Twisted", str(exception))
         return True
 
     def kill_thread(self):
