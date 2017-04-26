@@ -18,7 +18,14 @@ class GmailPolling():
     def init_connection(self):
         """Function to start an IMAP connection"""
         # https://github.com/charlierguo/gmail
-        self.gmail_imap = gmail.login(local_settings.c1, local_settings.c2)
+        try:
+            self.gmail_imap = gmail.login(local_settings.c1, local_settings.c2)
+        except BaseException as e:
+            logger.error("@@ Errore in init_connection di polling.py")
+            logger.error("msg: " + str(e.message))
+            logger.error("args: " + str(e.args))
+            logger.error("class: " + str(e.__class__.__name__))
+            logger.error("trace: " + str(traceback.format_exc()))
         return True
 
     def idle_callback(self):
