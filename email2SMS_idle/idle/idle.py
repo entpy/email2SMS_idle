@@ -4,7 +4,7 @@ from threading import *
 from datetime import date
 from django.core.mail import send_mail
 from email2SMS_idle import local_settings
-import logging, email, traceback
+import logging, email, traceback, time
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -124,6 +124,7 @@ class Idler(object):
             try:
                 # tento il recupero della connessione e riprovo
                 # a prelevare le email da leggere
+                time.sleep(10) # XXX: vediamo se è questione di troppe riconnessioni in poco tempo
                 self.idle_recovery()
                 self.gmail.idle_callback()
             except BaseException as e:
