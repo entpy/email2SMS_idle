@@ -124,6 +124,7 @@ class Idler(object):
             try:
                 # tento il recupero della connessione e riprovo
                 # a prelevare le email da leggere
+                logger.error("setto un timeout per evitare troppe riconnessioni in poco tempo")
                 time.sleep(10) # XXX: vediamo se è questione di troppe riconnessioni in poco tempo
                 self.idle_recovery()
                 self.gmail.idle_callback()
@@ -176,6 +177,7 @@ class Idler(object):
         except BaseException as e:
             logger.error("2 ERRORE IN self.gmail.gmail_imap.logout(): " + str(e))
         finally:
+            time.sleep(2) # XXX: setto una sleep per evitare la riconnessione subito
             logger.info("2 self.gmail.init_connection()")
             self.gmail.init_connection()
             # assegno la nuova connessione al thread per poter rifare l'idle
