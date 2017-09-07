@@ -155,7 +155,11 @@ class Message():
         elif self.message.get_content_maintype() == "text":
             self.body = self.message.get_payload()
 
-        self.sent_at = datetime.datetime.fromtimestamp(time.mktime(email.utils.parsedate_tz(self.message['date'])[:9]))
+	self_msg = self.message['date']
+	email_utils = email.utils.parsedate_tz(self_msg)
+	email_utils_single_element = email_utils[:9]
+	time_mktime = time.mktime(email_utils_single_element)
+	self.sent_at = datetime.datetime.fromtimestamp(time_mktime)
 
         self.flags = self.parse_flags(raw_headers)
 

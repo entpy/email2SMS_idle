@@ -94,10 +94,14 @@ class GmailPolling():
             response = client.send_message({'from': local_settings.from_name, 'to': "+39" + str(sms_number), 'text': text})
             response = response['messages'][0]
             if response['status'] == '0':
-                logger.info('Sent message ', response['message-id'])
-                logger.info('Remaining balance is ', response['remaining-balance'])
+                logger.info('Sent message ' + str(response['message-id']))
+                logger.info('Remaining balance is ' + str(response['remaining-balance']))
             else:
-                logger.error('SMS sending error: ', response['error-text'])
+		# TODO: l'invio della mail va spostato dall'oggetto idle e messo in qualcosa di più comune a tutti
+		# quindi inviare anche qui una email ad admin, perchè è fallito l'invio degli sms, per credito
+		# esaurito, per esempio
+
+                logger.error('SMS sending error: ' + str(response['error-text']))
         return True
 
     def clear_inbox_msg(self):
