@@ -19,6 +19,19 @@ class GmailPolling():
         """Function to start an IMAP connection"""
         # https://github.com/charlierguo/gmail
         try:
+            # XXX
+
+            # OAuth authentication
+            # If you have already received an OAuth2 access token from Google for a given user, you can easily log the user in.
+            # (Because OAuth 1.0 usage was deprecated in April 2012, this library does not currently support its usage)
+            # gmail = gmail.authenticate(username, access_token)
+
+            # XXX
+            # |||||||||||||||||
+            # vvvvvvvvvvvvvvvvv
+            #
+            # risolto utilizzando una password per app
+            # utilizzando le password per app -> https://support.google.com/mail/answer/185833?hl=it
             self.gmail_imap = gmail.login(local_settings.c1, local_settings.c2)
         except BaseException as e:
             logger.error("@@ Errore in init_connection di polling.py")
@@ -32,7 +45,8 @@ class GmailPolling():
         """Function performed when idle notify new emails"""
         try:
             # logger.info("check email")
-            self.mail2sms()
+            fake_sms_send=True# XXX per inviare effettivamente gli sms commentare la variabile
+            self.mail2sms(fake_sms_send)
         # except self.gmail_imap.imap.abort, e:
         except BaseException as e:
             # probabilmente un timeout della connessione, provo a riconnettermi (logout + nuova connessione)
@@ -47,7 +61,7 @@ class GmailPolling():
             # mi riconnetto e provo a rifare la lettura di eventuali nuove email
         return True
 
-    def mail2sms(self):
+    def mail2sms(self, fake_sms_send=False):
         """List of unread email"""
         # prelevo l'elenco di email in base a determinati criteri
         # emails = self.gmail_imap.inbox().mail(on=date.today(), unread=True, sender=local_settings.sender)
@@ -61,7 +75,10 @@ class GmailPolling():
             logger.info("oggetto email: " + str(email_subject))
             if email_subject.find("Allarme") > -1 or email_subject.find("Fin.All.") > -1:
                 # invio l'sms
-                self.send_sms(text=email_subject)
+		if fake_sms_send:
+                    logger.info("(invio sms finto) invio a: " + str(sms_number) + " -> testo: " + str(text))
+                else:
+                    self.send_sms(text=email_subject)
             # marco la mail come letta
             email.read()
         # fix per far riscaricare i messaggi della inbox
